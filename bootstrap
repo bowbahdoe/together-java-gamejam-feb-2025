@@ -1,0 +1,1 @@
+-jar jresolve.jar --output-directory lib --use-module-names --purge-output-directory "pkg:maven/dev.mccue/tools-jdk@2025.01.31"

@@ -1,0 +1,31 @@
+<html>
+<head>
+
+    <script src="https://cjrtnc.leaningtech.com/4.2/loader.js"></script>
+    <style>
+        html,
+        body {
+            margin: 0;
+        }
+
+    </style>
+</head>
+<body>
+
+<div style="display: flex; flex-direction: column; align-items: center">
+    <div id="game" style="display: flex; flex-direction: column; align-items: center; width: 100%">
+
+    </div>
+</div>
+
+
+
+<script type="module">
+    await cheerpjInit({version: 17});
+
+    cheerpjCreateDisplay(650, 700, document.getElementById("game"));
+    await cheerpjRunJar("/app/game.jar");
+
+</script>
+</body>
+</html>
