@@ -40,7 +40,11 @@ class Main {
             return c -> c.plus(vel);
         }
     }
-    record Obstacle(Vec2 pos, Movement movement) {}
+    record Obstacle(Vec2 pos, Movement movement) {
+        Obstacle move() {
+            return new Obstacle(movement.update(pos), movement);
+        }
+    }
 
     ArrayList<Obstacle> obstacles = new ArrayList<>();
 
@@ -99,10 +103,12 @@ class Main {
         gc.fillRect(0, 500, 650, 6);
     }
 
+    int score = 0;
+
     Font font = new Font(Font.SANS_SERIF, Font.BOLD, 26);
     void drawScore(GraphicsConsole gc) {
         gc.setColor(Color.BLACK);
-        gc.drawString("Score: 0", 20, 640);
+        gc.drawString("Score: " + score, 20, 640);
     }
     void drawPlayer(GraphicsConsole gc) {
         gc.setColor(Color.BLACK);
@@ -212,7 +218,6 @@ class Main {
         obstacles.add(new Obstacle(new Vec2(2000, groundY), Movement.velocity(obstacleVelocity)));
 
         while (true) {
-            skyRotation = skyRotation.next(5);
             Vec2 playerAcceleration = new Vec2(0, 0);
             if (gc.isKeyDown(KeyEvent.VK_SPACE) && onGround()) {
                 playerAcceleration = playerAcceleration.plus(new Vec2(0, -20));
@@ -259,17 +264,45 @@ class Main {
                 ticksUntilDoubleJump.reset();
             }
 
+
+
+            int angularVelocity = 0;
             if (movingR) {
-                currentRotation = currentRotation.next(-20);
+                angularVelocity -= 20;
             }
             if (movingL) {
-                currentRotation = currentRotation.next(20);
+                angularVelocity += 20;
             }
+
+            if (playerPos.x <= 0) {
+                playerPos = playerPos.withX(0);
+                playerVelocity = playerVelocity.withX(0);
+                angularVelocity = 0;
+            }
+
+            if (playerPos.x >= WIDTH) {
+                playerPos = playerPos.withX(WIDTH);
+                playerVelocity = playerVelocity.withX(0);
+                angularVelocity = 0;
+            }
+
+            currentRotation = currentRotation.next(angularVelocity);
+
 
 
             for (int i = 0; i < obstacles.size(); i++) {
                 var obstacle = obstacles.get(i);
-                obstacles.set(i, new Obstacle(obstacle.movement.update(obstacle.pos), obstacle.movement));
+                obstacles.set(i, obstacle.move());
+            }
+
+            var obstacleIter = obstacles.iterator();
+            while (obstacleIter.hasNext()) {
+                var obstacle = obstacleIter.next();
+
+                if (obstacle.pos.x < 0 ) {
+                    obstacleIter.remove();
+                    score++;
+                }
             }
 
             synchronized (gc) {

@@ -2,11 +2,8 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="eaab1f90-5503-492b-91cf-3def120ca33b" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/.idea/jsLibraryMappings.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/libraries/lib.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/gamejam.iml" beforeDir="false" afterPath="$PROJECT_DIR$/gamejam.iml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/site/game.jar" beforeDir="false" afterPath="$PROJECT_DIR$/site/game.jar" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/Main.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/Main.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -142,7 +139,7 @@
       <workItem from="1770080835524" duration="747000" />
       <workItem from="1770137188683" duration="1958000" />
       <workItem from="1770224001143" duration="3097000" />
-      <workItem from="1770233196350" duration="1816000" />
+      <workItem from="1770233196350" duration="3609000" />
     </task>
     <servers />
   </component>
