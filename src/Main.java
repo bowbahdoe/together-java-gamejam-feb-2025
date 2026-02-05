@@ -3,7 +3,6 @@ import hsa2.GraphicsConsole;
 import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.util.ArrayList;
-import java.util.List;
 
 class Main {
 
@@ -40,11 +39,73 @@ class Main {
             return c -> c.plus(vel);
         }
     }
-    record Obstacle(Vec2 pos, Movement movement) {
-        Obstacle move() {
-            return new Obstacle(movement.update(pos), movement);
+    abstract class Obstacle {
+        Vec2 pos;
+        Obstacle(Vec2 pos) {
+            this.pos = pos;
+        }
+
+        abstract Obstacle tick();
+
+        abstract void draw(GraphicsConsole g);
+    }
+
+    class FallingSquare extends Obstacle {
+        final int ticks;
+
+        FallingSquare(Vec2 pos) {
+            this(0, pos);
+        }
+
+        FallingSquare(int ticks, Vec2 pos) {
+            super(pos);
+            this.ticks = ticks;
+        }
+
+        @Override
+        FallingSquare tick() {
+            return new FallingSquare(Math.min(ticks + 1, 10), pos.plus(new Vec2(0, 6)));
+        }
+
+        @Override
+        void draw(GraphicsConsole gc) {
+            gc.setColor(Color.RED);
+            var w = (int) (30 * ticks / 10.0);
+            var h = (int) (30 * ticks / 10.0);
+            gc.fillRect(
+                    center((int) pos.x, w),
+                    center((int) pos.y, h),
+                    w,
+                    h
+            );
         }
     }
+
+    class SlidingSquare extends Obstacle {
+        private final boolean forwards;
+
+        SlidingSquare(Vec2 pos, boolean forwards) {
+            super(pos);
+            this.forwards = forwards;
+        }
+
+        @Override
+        SlidingSquare tick() {
+            return new SlidingSquare(pos.plus(new Vec2((forwards ? 1 : -1) * 6, 0)), forwards);
+        }
+
+        @Override
+        void draw(GraphicsConsole gc) {
+            gc.setColor(Color.ORANGE);
+            gc.fillRect(
+                    center((int) pos.x, 30),
+                    center((int) pos.y, 30),
+                    30,
+                    30
+            );
+        }
+    }
+
 
     ArrayList<Obstacle> obstacles = new ArrayList<>();
 
@@ -52,7 +113,7 @@ class Main {
     final int HEIGHT = 650;
 
     double groundY = 540;
-    Vec2 playerPos = new Vec2(50, groundY);
+    Vec2 playerPos = new Vec2(WIDTH / 2, groundY);
     Vec2 playerVelocity = new Vec2(0, 0);
     Vec2 gravity = new Vec2(0, 2);
     Rotation skyRotation = new Rotation(0);
@@ -209,14 +270,6 @@ class Main {
         var gc = new GraphicsConsole(WIDTH, HEIGHT);
         gc.setFont(font);
 
-        var obstacleVelocity = new Vec2(-6, 0);
-        obstacles.add(new Obstacle(new Vec2(500, groundY), v -> v.plus(obstacleVelocity).plus(new Vec2(0, -1))));
-        obstacles.add(new Obstacle(new Vec2(800, groundY), Movement.velocity(obstacleVelocity)));
-        obstacles.add(new Obstacle(new Vec2(1200, groundY), Movement.velocity(obstacleVelocity)));
-        obstacles.add(new Obstacle(new Vec2(1600, groundY), Movement.velocity(obstacleVelocity)));
-        obstacles.add(new Obstacle(new Vec2(1800, groundY), Movement.velocity(obstacleVelocity)));
-        obstacles.add(new Obstacle(new Vec2(2000, groundY), Movement.velocity(obstacleVelocity)));
-
         while (true) {
             Vec2 playerAcceleration = new Vec2(0, 0);
             if (gc.isKeyDown(KeyEvent.VK_SPACE) && onGround()) {
@@ -265,6 +318,28 @@ class Main {
             }
 
 
+            if (Math.random() < 0.025) {
+                obstacles.add(new FallingSquare(
+                        new Vec2((int) (Math.random() * WIDTH),  (int) (Math.random() * HEIGHT / 4))
+                ));
+            }
+
+            if (Math.random() < 0.0125) {
+                if (Math.random() < 0.5) {
+                    obstacles.add(new SlidingSquare(
+                            new Vec2(1,  groundY),
+                            true
+                    ));
+                }
+                else {
+                    obstacles.add(new SlidingSquare(
+                            new Vec2(WIDTH,  groundY),
+                            false
+                    ));
+                }
+
+            }
+
 
             int angularVelocity = 0;
             if (movingR) {
@@ -292,14 +367,16 @@ class Main {
 
             for (int i = 0; i < obstacles.size(); i++) {
                 var obstacle = obstacles.get(i);
-                obstacles.set(i, obstacle.move());
+                obstacles.set(i, obstacle.tick());
             }
 
             var obstacleIter = obstacles.iterator();
             while (obstacleIter.hasNext()) {
                 var obstacle = obstacleIter.next();
 
-                if (obstacle.pos.x < 0 ) {
+                if (obstacle.pos.x < 0 || obstacle.pos.y > HEIGHT || obstacle.pos.x > WIDTH ) {
+
+                    Toolkit.getDefaultToolkit().beep();
                     obstacleIter.remove();
                     score++;
                 }
@@ -312,13 +389,7 @@ class Main {
                 drawScore(gc);
 
                 for (var obstacle : obstacles) {
-                    gc.setColor(Color.RED);
-                    gc.fillRect(
-                            center((int) obstacle.pos.x, 30),
-                            center((int) obstacle.pos.y, 30),
-                            30,
-                            30
-                    );
+                    obstacle.draw(gc);
                 }
             }
 
