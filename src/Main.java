@@ -2,6 +2,8 @@ import hsa2.GraphicsConsole;
 
 import java.awt.*;
 import java.awt.event.KeyEvent;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.ArrayList;
 
 class Main {
@@ -39,7 +41,7 @@ class Main {
             return c -> c.plus(vel);
         }
     }
-    abstract class Obstacle {
+    sealed abstract class Obstacle {
         Vec2 pos;
         Obstacle(Vec2 pos) {
             this.pos = pos;
@@ -48,9 +50,11 @@ class Main {
         abstract Obstacle tick();
 
         abstract void draw(GraphicsConsole g);
+
+        abstract BoundingSphere boundingSphere();
     }
 
-    class FallingSquare extends Obstacle {
+    final class FallingSquare extends Obstacle {
         final int ticks;
 
         FallingSquare(Vec2 pos) {
@@ -79,9 +83,14 @@ class Main {
                     h
             );
         }
+
+        @Override
+        BoundingSphere boundingSphere() {
+            return new BoundingSphere(pos, 30);
+        }
     }
 
-    class SlidingSquare extends Obstacle {
+    final class SlidingSquare extends Obstacle {
         private final boolean forwards;
 
         SlidingSquare(Vec2 pos, boolean forwards) {
@@ -104,19 +113,38 @@ class Main {
                     30
             );
         }
+        @Override
+        BoundingSphere boundingSphere() {
+            return new BoundingSphere(pos, 30);
+        }
     }
 
+    record BoundingBox(Vec2 center, int width, int height) {}
+    record BoundingSphere(Vec2 center, int radius) {
+        boolean intersects(BoundingSphere boundingSphere) {
+            var R0 = radius;
+            var R1 = boundingSphere.radius;
+            var x0 = center.x;
+            var x1 = boundingSphere.center.x;
+            var y0 = center.y;
+            var y1 = boundingSphere.center.y;
+
+            var a = Math.pow(x0 - x1, 2) + Math.pow(y0 - y1, 2);
+            return Math.pow(R0 - R1, 2) <= a && a <= Math.pow(R0 + R1, 2);
+        }
+    }
 
     ArrayList<Obstacle> obstacles = new ArrayList<>();
 
     final int WIDTH = 650;
     final int HEIGHT = 650;
 
-    double groundY = 540;
-    Vec2 playerPos = new Vec2(WIDTH / 2, groundY);
-    Vec2 playerVelocity = new Vec2(0, 0);
-    Vec2 gravity = new Vec2(0, 2);
-    Rotation skyRotation = new Rotation(0);
+    final double groundY = 540;
+    final Vec2 initialPlayerPos = new Vec2(WIDTH / 2, groundY);
+    Vec2 playerPos = initialPlayerPos;
+    final Vec2 initialPlayerVelocity = new Vec2(0, 0);
+    Vec2 playerVelocity = initialPlayerVelocity;
+    final Vec2 gravity = new Vec2(0, 2);
 
     int center(int xOrY, int widthOrHeight) {
         return xOrY - (widthOrHeight / 2);
@@ -164,12 +192,15 @@ class Main {
         gc.fillRect(0, 500, 650, 6);
     }
 
-    int score = 0;
+    Instant startTime;
+    Instant tickStart;
 
     Font font = new Font(Font.SANS_SERIF, Font.BOLD, 26);
     void drawScore(GraphicsConsole gc) {
         gc.setColor(Color.BLACK);
-        gc.drawString("Score: " + score, 20, 640);
+
+        var d = Duration.between(startTime, tickStart);
+        gc.drawString( d.getSeconds() + ":" + d.getNano() / 10000000, WIDTH / 8, HEIGHT / 8);
     }
     void drawPlayer(GraphicsConsole gc) {
         gc.setColor(Color.BLACK);
@@ -207,10 +238,6 @@ class Main {
                 12,
                 12
         );
-
-
-
-
     }
 
     boolean onGround() {
@@ -242,7 +269,6 @@ class Main {
 
     Rotation currentRotation = new Rotation(0);
 
-    double horizontalAcceleration = 5;
     boolean movingL = false;
     boolean movingR = false;
     boolean movingLR() {
@@ -265,133 +291,190 @@ class Main {
     }
     ResettableInt ticksUntilDoubleJump = new ResettableInt(8);
     boolean running = false;
+    boolean gameOver = false;
+    final int maxHealth = 3;
+    int health = maxHealth;
     void main() {
 
         var gc = new GraphicsConsole(WIDTH, HEIGHT);
         gc.setFont(font);
 
+        startTime = Instant.now().minus(Duration.ofMillis(1));
         while (true) {
-            Vec2 playerAcceleration = new Vec2(0, 0);
-            if (gc.isKeyDown(KeyEvent.VK_SPACE) && onGround()) {
-                playerAcceleration = playerAcceleration.plus(new Vec2(0, -20));
-            }
 
-            ticksUntilDoubleJump.current = Math.max(ticksUntilDoubleJump.current - 1, 0);
-            if (gc.isKeyDown(KeyEvent.VK_SPACE) && !onGround() && !doubleJumped && ticksUntilDoubleJump.current == 0) {
-                playerAcceleration = playerAcceleration.plus(new Vec2(0, -20));
-                doubleJumped = true;
-            }
+            update:
+            while (true) {
 
-            if (!onGround()) {
-                playerAcceleration = playerAcceleration.plus(gravity);
-            }
+                if (gameOver) {
+                    if (gc.isKeyDown(GraphicsConsole.VK_SHIFT)) {
+                        gameOver = false;
+                        ticksUntilDoubleJump.reset();
+                        running = false;
+                        doubleJumped = false;
+                        movingR = false;
+                        movingL = false;
+                        playerPos = initialPlayerPos;
+                        playerVelocity = initialPlayerVelocity;
+                        startTime = Instant.now();
+                        obstacles.clear();
+                    }
+                }
+                boolean hitAny = false;
+                for (var obstacle : obstacles) {
+                    var bs = obstacle.boundingSphere();
+                    if (bs.intersects(new BoundingSphere(playerPos, 3))) {
+                        health--;
 
+                        hitAny = true;
+                    }
+                }
 
-            movingR = gc.isKeyDown(KeyEvent.VK_D);
-            movingL = gc.isKeyDown(KeyEvent.VK_A);
-
-
-            playerVelocity = playerVelocity.plus(playerAcceleration);
-
-
-            running = gc.isKeyDown(KeyEvent.VK_SHIFT);
-            var horizontalVelocity = new Vec2(5, 0);
-            Vec2 instantaneousPlayerVelocity = playerVelocity;
-            if (movingL) {
-                instantaneousPlayerVelocity = instantaneousPlayerVelocity.plus(horizontalVelocity.mul(-1));
-            }
-            if (movingR) {
-                instantaneousPlayerVelocity = instantaneousPlayerVelocity.plus(horizontalVelocity);
-            }
-
-            if (running) {
-                instantaneousPlayerVelocity = instantaneousPlayerVelocity.mulX(2).mulY(1.5);
-            }
-
-            playerPos = playerPos.plus(instantaneousPlayerVelocity);
-
-            if (playerPos.y >= groundY) {
-                playerPos = playerPos.withY(groundY);
-                playerVelocity = playerVelocity.withY(0);
-                doubleJumped = false;
-                ticksUntilDoubleJump.reset();
-            }
-
-
-            if (Math.random() < 0.025) {
-                obstacles.add(new FallingSquare(
-                        new Vec2((int) (Math.random() * WIDTH),  (int) (Math.random() * HEIGHT / 4))
-                ));
-            }
-
-            if (Math.random() < 0.0125) {
-                if (Math.random() < 0.5) {
-                    obstacles.add(new SlidingSquare(
-                            new Vec2(1,  groundY),
-                            true
-                    ));
+                if (hitAny) {
+                    health--;
                 }
                 else {
-                    obstacles.add(new SlidingSquare(
-                            new Vec2(WIDTH,  groundY),
-                            false
+                    health = Math.min(health + 1, maxHealth);
+                }
+
+                if (health <= 0) {
+                    gameOver = true;
+                    break;
+                }
+
+                tickStart = Instant.now();
+
+                Vec2 playerAcceleration = new Vec2(0, 0);
+                if (gc.isKeyDown(KeyEvent.VK_SPACE) && onGround()) {
+                    playerAcceleration = playerAcceleration.plus(new Vec2(0, -20));
+                }
+
+                ticksUntilDoubleJump.current = Math.max(ticksUntilDoubleJump.current - 1, 0);
+                if (gc.isKeyDown(KeyEvent.VK_SPACE) && !onGround() && !doubleJumped && ticksUntilDoubleJump.current == 0) {
+                    playerAcceleration = playerAcceleration.plus(new Vec2(0, -20));
+                    doubleJumped = true;
+                }
+
+                if (!onGround()) {
+                    playerAcceleration = playerAcceleration.plus(gravity);
+                }
+
+
+                movingR = gc.isKeyDown(KeyEvent.VK_D);
+                movingL = gc.isKeyDown(KeyEvent.VK_A);
+
+
+                playerVelocity = playerVelocity.plus(playerAcceleration);
+
+
+                running = gc.isKeyDown(KeyEvent.VK_SHIFT);
+                var horizontalVelocity = new Vec2(5, 0);
+                Vec2 instantaneousPlayerVelocity = playerVelocity;
+                if (movingL) {
+                    instantaneousPlayerVelocity = instantaneousPlayerVelocity.plus(horizontalVelocity.mul(-1));
+                }
+                if (movingR) {
+                    instantaneousPlayerVelocity = instantaneousPlayerVelocity.plus(horizontalVelocity);
+                }
+
+                if (running) {
+                    instantaneousPlayerVelocity = instantaneousPlayerVelocity.mulX(2).mulY(1.5);
+                }
+
+                playerPos = playerPos.plus(instantaneousPlayerVelocity);
+
+                if (playerPos.y >= groundY) {
+                    playerPos = playerPos.withY(groundY);
+                    playerVelocity = playerVelocity.withY(0);
+                    doubleJumped = false;
+                    ticksUntilDoubleJump.reset();
+                }
+
+
+                var d = Duration.between(startTime, tickStart);
+                var scale = Math.min(Math.max(d.getSeconds() / 10.0, 1), 4);
+                if (Math.random() < 0.025 * scale) {
+                    obstacles.add(new FallingSquare(
+                            new Vec2((int) (Math.random() * WIDTH),  (int) (Math.random() * HEIGHT / 4))
                     ));
                 }
 
-            }
+                if (Math.random() < 0.0125 * scale) {
+                    if (Math.random() < 0.5) {
+                        obstacles.add(new SlidingSquare(
+                                new Vec2(1,  groundY),
+                                true
+                        ));
+                    }
+                    else {
+                        obstacles.add(new SlidingSquare(
+                                new Vec2(WIDTH,  groundY),
+                                false
+                        ));
+                    }
 
-
-            int angularVelocity = 0;
-            if (movingR) {
-                angularVelocity -= 20;
-            }
-            if (movingL) {
-                angularVelocity += 20;
-            }
-
-            if (playerPos.x <= 0) {
-                playerPos = playerPos.withX(0);
-                playerVelocity = playerVelocity.withX(0);
-                angularVelocity = 0;
-            }
-
-            if (playerPos.x >= WIDTH) {
-                playerPos = playerPos.withX(WIDTH);
-                playerVelocity = playerVelocity.withX(0);
-                angularVelocity = 0;
-            }
-
-            currentRotation = currentRotation.next(angularVelocity);
-
-
-
-            for (int i = 0; i < obstacles.size(); i++) {
-                var obstacle = obstacles.get(i);
-                obstacles.set(i, obstacle.tick());
-            }
-
-            var obstacleIter = obstacles.iterator();
-            while (obstacleIter.hasNext()) {
-                var obstacle = obstacleIter.next();
-
-                if (obstacle.pos.x < 0 || obstacle.pos.y > HEIGHT || obstacle.pos.x > WIDTH ) {
-
-                    Toolkit.getDefaultToolkit().beep();
-                    obstacleIter.remove();
-                    score++;
                 }
-            }
 
+
+                int angularVelocity = 0;
+                if (movingR) {
+                    angularVelocity -= 20;
+                }
+                if (movingL) {
+                    angularVelocity += 20;
+                }
+
+                if (playerPos.x <= 0) {
+                    playerPos = playerPos.withX(0);
+                    playerVelocity = playerVelocity.withX(0);
+                    angularVelocity = 0;
+                }
+
+                if (playerPos.x >= WIDTH) {
+                    playerPos = playerPos.withX(WIDTH);
+                    playerVelocity = playerVelocity.withX(0);
+                    angularVelocity = 0;
+                }
+
+                currentRotation = currentRotation.next(angularVelocity);
+
+
+
+                for (int i = 0; i < obstacles.size(); i++) {
+                    var obstacle = obstacles.get(i);
+                    obstacles.set(i, obstacle.tick());
+                }
+
+                var obstacleIter = obstacles.iterator();
+                while (obstacleIter.hasNext()) {
+                    var obstacle = obstacleIter.next();
+
+                    if (obstacle.pos.x < 0 || obstacle.pos.y > HEIGHT || obstacle.pos.x > WIDTH ) {
+                        obstacleIter.remove();
+                    }
+                }
+
+                break;
+            }
             synchronized (gc) {
                 gc.clear();
                 drawBackground(gc);
                 drawPlayer(gc);
-                drawScore(gc);
+
+
 
                 for (var obstacle : obstacles) {
                     obstacle.draw(gc);
                 }
+
+                if (gameOver) {
+                    gc.setColor(Color.BLACK);
+                    gc.drawString("GAME OVER.", WIDTH / 4, HEIGHT / 4);
+                    gc.drawString("PRESS SHIFT TO RESTART.", WIDTH / 4, HEIGHT / 4 + 30);
+                }
+
+                drawScore(gc);
             }
+
 
             gc.sleep((long) (1000 / 30.0));
         }

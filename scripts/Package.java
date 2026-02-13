@@ -24,7 +24,8 @@ void main() throws Exception {
     Jar.run(args -> {
         args.__create().__file(Path.of("build", "jar", "game.jar"))
                 .__main_class("Main")
-                ._C(Path.of("build", "classes"), ".");
+                ._C(Path.of("build", "classes"), ".")
+                ._C(Path.of("res"), ".");
     });
 
     Files.copy(Path.of("build", "jar", "game.jar"), Path.of("site", "game.jar"), StandardCopyOption.REPLACE_EXISTING);

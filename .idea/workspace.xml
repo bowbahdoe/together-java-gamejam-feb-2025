@@ -3,6 +3,8 @@
   <component name="ChangeListManager">
     <list default="true" id="eaab1f90-5503-492b-91cf-3def120ca33b" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/gamejam.iml" beforeDir="false" afterPath="$PROJECT_DIR$/gamejam.iml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/scripts/Package.java" beforeDir="false" afterPath="$PROJECT_DIR$/scripts/Package.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/site/game.jar" beforeDir="false" afterPath="$PROJECT_DIR$/site/game.jar" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/Main.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/Main.java" afterDir="false" />
     </list>
@@ -46,7 +48,7 @@
     &quot;git-widget-placeholder&quot;: &quot;main&quot;,
     &quot;ignore.virus.scanning.warn.message&quot;: &quot;true&quot;,
     &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
-    &quot;last_opened_file_path&quot;: &quot;C:/Users/haha scammed/IdeaProjects/gamejam&quot;,
+    &quot;last_opened_file_path&quot;: &quot;C:/Users/haha scammed/IdeaProjects/gamejam/res&quot;,
     &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
     &quot;org.elm.workspace.PROJECT_DISCOVERY&quot;: &quot;true&quot;,
     &quot;project.structure.last.edited&quot;: &quot;Modules&quot;,
@@ -57,6 +59,7 @@
 }</component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
+      <recent name="C:\Users\haha scammed\IdeaProjects\gamejam\res" />
       <recent name="C:\Users\haha scammed\IdeaProjects\gamejam" />
     </key>
     <key name="MoveFile.RECENT_KEYS">
@@ -139,7 +142,13 @@
       <workItem from="1770080835524" duration="747000" />
       <workItem from="1770137188683" duration="1958000" />
       <workItem from="1770224001143" duration="3097000" />
-      <workItem from="1770233196350" duration="3609000" />
+      <workItem from="1770233196350" duration="5102000" />
+      <workItem from="1770302330448" duration="8698000" />
+      <workItem from="1770409502880" duration="597000" />
+      <workItem from="1770674026925" duration="1394000" />
+      <workItem from="1770785255229" duration="607000" />
+      <workItem from="1770858459644" duration="677000" />
+      <workItem from="1770932085775" duration="3129000" />
     </task>
     <servers />
   </component>
