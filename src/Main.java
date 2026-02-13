@@ -320,6 +320,7 @@ class Main {
                         tickStart = startTime.plus(Duration.ofMillis(1));
                         obstacles.clear();
                         health = maxHealth;
+                        continue;
                     }
                 }
                 boolean hitAny = false;
