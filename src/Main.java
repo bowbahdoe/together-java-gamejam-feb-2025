@@ -292,7 +292,7 @@ class Main {
     ResettableInt ticksUntilDoubleJump = new ResettableInt(8);
     boolean running = false;
     boolean gameOver = false;
-    final int maxHealth = 3;
+    final int maxHealth = 2;
     int health = maxHealth;
     void main() {
 
@@ -317,6 +317,7 @@ class Main {
                         playerVelocity = initialPlayerVelocity;
                         startTime = Instant.now();
                         obstacles.clear();
+                        health = maxHealth;
                     }
                 }
                 boolean hitAny = false;
@@ -329,6 +330,7 @@ class Main {
                     }
                 }
 
+                IO.println(health);
                 if (hitAny) {
                     health--;
                 }
