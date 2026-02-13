@@ -1,13 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="eaab1f90-5503-492b-91cf-3def120ca33b" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/gamejam.iml" beforeDir="false" afterPath="$PROJECT_DIR$/gamejam.iml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/scripts/Package.java" beforeDir="false" afterPath="$PROJECT_DIR$/scripts/Package.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/site/game.jar" beforeDir="false" afterPath="$PROJECT_DIR$/site/game.jar" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/Main.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/Main.java" afterDir="false" />
-    </list>
+    <list default="true" id="eaab1f90-5503-492b-91cf-3def120ca33b" name="Changes" comment="" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -148,7 +142,7 @@
       <workItem from="1770674026925" duration="1394000" />
       <workItem from="1770785255229" duration="607000" />
       <workItem from="1770858459644" duration="677000" />
-      <workItem from="1770932085775" duration="3129000" />
+      <workItem from="1770932085775" duration="3973000" />
     </task>
     <servers />
   </component>

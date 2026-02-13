@@ -316,6 +316,8 @@ class Main {
                         playerPos = initialPlayerPos;
                         playerVelocity = initialPlayerVelocity;
                         startTime = Instant.now();
+
+                        tickStart = startTime.plus(Duration.ofMillis(1));
                         obstacles.clear();
                         health = maxHealth;
                     }
@@ -330,7 +332,6 @@ class Main {
                     }
                 }
 
-                IO.println(health);
                 if (hitAny) {
                     health--;
                 }
